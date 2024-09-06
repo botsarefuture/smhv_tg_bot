@@ -32,7 +32,7 @@ from telegram import (
 )
 from telegram.constants import ParseMode
 from telegram.ext import (
-    Application, #Pylint ignore: reimported
+    Application,  # Pylint ignore: reimported
     CommandHandler,
     ContextTypes,
     MessageHandler,
@@ -44,7 +44,7 @@ from telegram.ext import (
     MessageHandler,
     PollAnswerHandler,
     PollHandler,
-    filters
+    filters,
 )
 
 # Enable logging
@@ -90,7 +90,9 @@ async def poll(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     context.bot_data.update(payload)
 
 
-async def receive_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def receive_poll_answer(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Summarize a users poll vote"""
     answer = update.poll_answer
     answered_poll = context.bot_data[answer.poll_id]
@@ -114,23 +116,33 @@ async def receive_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE
     answered_poll["answers"] += 1
     # Close poll after three participants voted
     if answered_poll["answers"] == TOTAL_VOTER_COUNT:
-        await context.bot.stop_poll(answered_poll["chat_id"], answered_poll["message_id"])
+        await context.bot.stop_poll(
+            answered_poll["chat_id"], answered_poll["message_id"]
+        )
 
 
 async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a predefined poll"""
     questions = ["1", "2", "4", "20"]
     message = await update.effective_message.reply_poll(
-        "How many eggs do you need for a cake?", questions, type=Poll.QUIZ, correct_option_id=2
+        "How many eggs do you need for a cake?",
+        questions,
+        type=Poll.QUIZ,
+        correct_option_id=2,
     )
     # Save some info about the poll the bot_data for later use in receive_quiz_answer
     payload = {
-        message.poll.id: {"chat_id": update.effective_chat.id, "message_id": message.message_id}
+        message.poll.id: {
+            "chat_id": update.effective_chat.id,
+            "message_id": message.message_id,
+        }
     }
     context.bot_data.update(payload)
 
 
-async def receive_quiz_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def receive_quiz_answer(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Close quiz after three participants took it"""
     # the bot can receive closed poll updates we don't care about
     if update.poll.is_closed:
