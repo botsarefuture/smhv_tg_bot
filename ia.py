@@ -36,7 +36,7 @@ from telegram.ext import (
     ContextTypes,
     MessageHandler,
     filters,
-    PicklePersistence
+    PicklePersistence,
 )
 
 # Enable logging
@@ -51,13 +51,17 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
-def extract_status_change(chat_member_update: ChatMemberUpdated) -> Optional[Tuple[bool, bool]]:
+def extract_status_change(
+    chat_member_update: ChatMemberUpdated,
+) -> Optional[Tuple[bool, bool]]:
     """Takes a ChatMemberUpdated instance and extracts whether the 'old_chat_member' was a member
     of the chat and whether the 'new_chat_member' is a member of the chat. Returns None, if
     the status didn't change.
     """
     status_change = chat_member_update.difference().get("status")
-    old_is_member, new_is_member = chat_member_update.difference().get("is_member", (None, None))
+    old_is_member, new_is_member = chat_member_update.difference().get(
+        "is_member", (None, None)
+    )
 
     if status_change is None:
         return None
@@ -117,9 +121,15 @@ async def track_chats(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 async def show_chats(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Shows which chats the bot is in"""
-    user_ids = ", ".join(str(uid) for uid in context.bot_data.setdefault("user_ids", set()))
-    group_ids = ", ".join(str(gid) for gid in context.bot_data.setdefault("group_ids", set()))
-    channel_ids = ", ".join(str(cid) for cid in context.bot_data.setdefault("channel_ids", set()))
+    user_ids = ", ".join(
+        str(uid) for uid in context.bot_data.setdefault("user_ids", set())
+    )
+    group_ids = ", ".join(
+        str(gid) for gid in context.bot_data.setdefault("group_ids", set())
+    )
+    channel_ids = ", ".join(
+        str(cid) for cid in context.bot_data.setdefault("channel_ids", set())
+    )
     text = (
         f"@{context.bot.username} is currently in a conversation with the user IDs {user_ids}."
         f" Moreover it is a member of the groups with IDs {group_ids} "
@@ -128,7 +138,9 @@ async def show_chats(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     await update.effective_message.reply_text(text)
 
 
-async def greet_chat_members(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def greet_chat_members(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Greets new users in chats and announces when someone leaves"""
     result = extract_status_change(update.chat_member)
     if result is None:
@@ -149,7 +161,10 @@ async def greet_chat_members(update: Update, context: ContextTypes.DEFAULT_TYPE)
             parse_mode=ParseMode.HTML,
         )
 
-async def start_private_chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+
+async def start_private_chat(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Greets the user and records that they started a chat with the bot if it's a private chat.
     Since no `my_chat_member` update is issued when a user starts a private chat with the bot
     for the first time, we have to track it explicitly here.
@@ -171,18 +186,21 @@ def main() -> None:
     """Start the bot."""
     persistence = PicklePersistence(filepath="bot")
 
-
     # Create the Application and pass it your bot's token.
     application = Application.builder().token("TOKEN").persistence(persistence).build()
 
     # Keep track of which chats the bot is in
-    application.add_handler(ChatMemberHandler(track_chats, ChatMemberHandler.MY_CHAT_MEMBER))
+    application.add_handler(
+        ChatMemberHandler(track_chats, ChatMemberHandler.MY_CHAT_MEMBER)
+    )
     application.add_handler(CommandHandler("show_chats", show_chats))
 
     application.add_handler(CommandHandler("invite", invite))
 
     # Handle members joining/leaving chats.
-    application.add_handler(ChatMemberHandler(greet_chat_members, ChatMemberHandler.CHAT_MEMBER))
+    application.add_handler(
+        ChatMemberHandler(greet_chat_members, ChatMemberHandler.CHAT_MEMBER)
+    )
 
     # Interpret any other command or text message as a start of a private chat.
     # This will record the user as being in a private chat with bot.
